@@ -1,0 +1,17 @@
+fastapi>=0.68.0
+uvicorn>=0.15.0
+pydantic>=2.0.0
+python-multipart>=0.0.5
+python-dotenv>=0.19.0
+# Pin to 4.x: v5 can hit extra Hub paths (e.g. additional_chat_templates) on some classifier repos
+transformers>=4.40.0,<5
+torch
+structlog>=23.0.0
+httpx>=0.27.0
+mlflow>=2.13.0
+
+# Benchmark + demo (used by benchmarks/ and demo/)
+datasets>=2.19.0
+scikit-learn>=1.5.0
+pandas>=2.0.0
+streamlit>=1.36.0

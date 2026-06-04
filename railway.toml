@@ -1,0 +1,23 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[[services]]
+name = "api"
+
+[services.variables]
+PYTHONUNBUFFERED = "1"
+PYTHONDONTWRITEBYTECODE = "1"
+
+SENTIMENT_THRESHOLD = "0.5"
+TOPIC_THRESHOLD = "0.5"
+INTENT_THRESHOLD = "0.5"
+
+ENABLE_CONFIDENCE_GUARDING = "true"
+MANUAL_REVIEW_ON_LOW_CONFIDENCE = "true"
+ENABLE_PREDICTION_LOGGING = "true"

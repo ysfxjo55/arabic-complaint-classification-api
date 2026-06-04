@@ -1,0 +1,22 @@
+# gitleaks config — extends defaults with project-specific allowlist
+title = "text-complaint-api gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowlist for known non-secret patterns"
+paths = [
+    '''\.venv/''',
+    '''node_modules/''',
+    '''ui/node_modules/''',
+    '''\.hf_cache/''',
+    '''mlruns/''',
+    '''benchmarks/results\.csv''',
+]
+regexes = [
+    # placeholders in .env.example are not real secrets
+    '''your_huggingface_token_here''',
+    '''your_openai_api_key_here''',
+    '''dummy_token_for_tests''',
+]

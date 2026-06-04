@@ -1,0 +1,21 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - models_cache:/root/.cache/huggingface
+      - ./logs:/app/logs
+      - ./mlruns:/app/mlruns
+    env_file:
+      - .env
+    restart: unless-stopped
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+volumes:
+  models_cache:

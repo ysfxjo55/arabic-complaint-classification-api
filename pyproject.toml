@@ -1,0 +1,22 @@
+# Tooling config only. Dependencies live in requirements.txt.
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = [
+    ".venv",
+    ".hf_cache",
+    "mlruns",
+    "ui",
+    "benchmarks/results.csv",
+]
+
+[tool.ruff.lint]
+# Pyflakes + pycodestyle errors. Style rules (E501 line length, etc.) stay off
+# until a formatter sweep happens; CI surfaces them informationally.
+select = ["E", "F", "I"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
