@@ -80,7 +80,7 @@ side-effects and never decide routing.
 - Confidence thresholds (`SENTIMENT_THRESHOLD`, etc.) are static; no automatic recalibration.
 - We have no integration test that simulates LLM provider returning HTTP 500.
 - We have no integration test for `ALLOW_DEGRADED_STARTUP=true` path.
-- `/debug/env` is currently always exposed; not gated by environment.
+- `/debug/env` is gated behind `DEBUG_ENDPOINTS_ENABLED` (default false) — disabled in production.
 
 ---
 
@@ -114,4 +114,4 @@ side-effects and never decide routing.
    are validated by reading code, not by running tests.
 3. **No retries / circuit breaker** for the LLM HTTP call.
 4. **No request-level timeout** around the deterministic pipeline.
-5. **`/debug/env`** is reachable in any environment.
+5. **`/debug/env`** is gated behind `DEBUG_ENDPOINTS_ENABLED` (default false; off in production).

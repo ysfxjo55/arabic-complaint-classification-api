@@ -1,5 +1,9 @@
 # Text Complaint Analysis API
 
+![CI](https://github.com/yousef0852/arabic-complaint-classification-api/actions/workflows/ci.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Python](https://img.shields.io/badge/python-3.12-blue.svg)
+
 > Production-grade Arabic complaint classification with a deterministic rule engine and an optional LLM explanation layer. Built as an **AI Systems Engineering** portfolio project — the emphasis is on validation, failure handling, observability, and honest benchmarks.
 
 | | |
