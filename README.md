@@ -8,7 +8,7 @@
 
 | | |
 |---|---|
-| Stack | FastAPI · MARBERT-v2 · OpenAI-compatible LLM · structlog · MLflow |
+| Stack | FastAPI · MARBERT-v2 · OpenAI-compatible LLM · structlog |
 | UI | Next.js 16 + Tailwind (`ui/`) |
 | Benchmark | 68.3% binary accuracy on OOD Arabic tweets (500 samples) — [REPORT](./benchmarks/REPORT.md) |
 | Latency | p50 96 ms · p95 253 ms (CPU, 3 classifiers per request) |
@@ -188,7 +188,6 @@ cp .env.example .env
 
 - `HF_TOKEN` — required to download the 3 MARBERT classifiers.
 - `OPENAI_API_KEY` — only if you want `/explain-classification` to call the LLM.
-- `MLFLOW_TRACKING_URI` — `file:./mlruns` for local runs, `file:///app/mlruns` inside Docker.
 
 ### Run with Docker
 
@@ -223,9 +222,8 @@ uvicorn main:app --reload
 
 On startup, the app:
 
-1. Configures MLflow (`MLFLOW_TRACKING_URI`, default `file:///app/mlruns`).
-2. Verifies `HF_TOKEN`.
-3. Downloads and loads sentiment, topic, and action models in order.
+1. Verifies `HF_TOKEN`.
+2. Downloads and loads sentiment, topic, and action models in order.
 
 ### Strict vs degraded startup
 
@@ -355,7 +353,6 @@ LLM failures on `/explain-classification` do **not** return HTTP errors. The det
 
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
-| `OSError: Read-only file system: '/app'` on local startup | MLflow defaulting to Docker path | Set `MLFLOW_TRACKING_URI=file:./mlruns` in `.env` |
 | `/health` is 200 but `/predict` returns 503 `MODELS_NOT_READY` | Models did not load successfully | Check startup logs for `model_loading_failed` and `hf_token_check` |
 | HF 404 on `config.json` during model load | `HF_TOKEN` lacks access to a model repo, or repo ID changed | Verify repo in browser while logged in, or override `HF_MODEL_*` env vars |
 | First request to `/predict` is slow (~2-5s) | Cold model warm-up / first cache fill | Expected — subsequent requests are fast |

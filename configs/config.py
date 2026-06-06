@@ -38,7 +38,6 @@ class Settings:
     ALLOW_DEGRADED_STARTUP: bool = os.getenv("ALLOW_DEGRADED_STARTUP", "false").lower() == "true"
 
     # Operational
-    MLFLOW_TRACKING_URI: str = os.getenv("MLFLOW_TRACKING_URI", "file:./mlruns")
     DEBUG_ENDPOINTS_ENABLED: bool = os.getenv("DEBUG_ENDPOINTS_ENABLED", "false").lower() == "true"
 
     @classmethod

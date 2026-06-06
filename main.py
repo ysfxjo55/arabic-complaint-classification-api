@@ -1,6 +1,5 @@
 from contextlib import asynccontextmanager
 
-import mlflow
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -50,9 +49,6 @@ def _handle_startup_failure(event: str, **fields):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    mlflow.set_tracking_uri(settings.MLFLOW_TRACKING_URI)
-    mlflow.set_experiment("text-complaint-api")
-
     app.state.model_loader = None
     logger.info("hf_token_check", hf_token_set=bool(settings.HF_TOKEN))
     if not settings.HF_TOKEN:
