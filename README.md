@@ -77,6 +77,7 @@ flowchart LR
 | `LLM_TIMEOUT` | Request exceeded `LLM_TIMEOUT_SECONDS` |
 | `LLM_HTTP_ERROR` | Non-2xx or network error from provider |
 | `LLM_INVALID_RESPONSE` | Unparseable JSON or schema mismatch |
+| `EXPLAIN_QUOTA_EXCEEDED` | Public demo quota: max successful explains per IP (`EXPLAIN_MAX_PER_IP`) |
 | `explain_source: llm` | Success; `explanation` populated |
 | `explain_source: fallback` | LLM failed; see `error_code` |
 

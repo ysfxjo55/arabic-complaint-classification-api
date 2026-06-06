@@ -37,6 +37,10 @@ class Settings:
     ENABLE_PREDICTION_LOGGING: bool = os.getenv("ENABLE_PREDICTION_LOGGING", "false").lower() == "true"
     ALLOW_DEGRADED_STARTUP: bool = os.getenv("ALLOW_DEGRADED_STARTUP", "false").lower() == "true"
 
+    # Public demo: limit successful LLM explains per IP (0 = unlimited)
+    EXPLAIN_MAX_PER_IP: int = int(os.getenv("EXPLAIN_MAX_PER_IP", "1"))
+    EXPLAIN_QUOTA_WINDOW_HOURS: float = float(os.getenv("EXPLAIN_QUOTA_WINDOW_HOURS", "24"))
+
     # Operational
     DEBUG_ENDPOINTS_ENABLED: bool = os.getenv("DEBUG_ENDPOINTS_ENABLED", "false").lower() == "true"
 

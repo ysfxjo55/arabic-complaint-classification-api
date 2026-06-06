@@ -1,9 +1,11 @@
 from unittest.mock import MagicMock, patch
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from interfaces.api.explain_route import router as explain_router
+from interfaces.api import explain_route as explain_route_module
 from interfaces.schemas.complaint import (
     ActionDetail,
     ComplaintResponse,
@@ -39,6 +41,15 @@ app = FastAPI()
 app.include_router(explain_router)
 app.state.model_loader = MagicMock()
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def fresh_explain_quota():
+    from services.explain_quota import ExplainQuotaTracker
+
+    tracker = ExplainQuotaTracker(max_per_ip=1, window_seconds=3600)
+    with patch.object(explain_route_module, "explain_quota", tracker):
+        yield tracker
 
 
 def test_explain_disabled_no_llm_call():
@@ -110,3 +121,25 @@ def test_explain_llm_failure_returns_classification():
 def test_explain_empty_text_422():
     r = client.post("/explain-classification", json={"text": ""})
     assert r.status_code == 422
+
+
+def test_explain_quota_exceeded_skips_llm(fresh_explain_quota):
+    sample = _sample_classification()
+    fresh_explain_quota.record_success("testclient")
+
+    with patch("interfaces.api.explain_route.run_pipeline", return_value=sample):
+        with patch("interfaces.api.explain_route.settings") as mock_settings:
+            mock_settings.LLM_ENABLED = True
+            mock_settings.llm_configured = MagicMock(return_value=True)
+
+            with patch(
+                "interfaces.api.explain_route.llm_explain_classification",
+            ) as mock_llm:
+                r = client.post("/explain-classification", json={"text": "test complaint"})
+
+    assert r.status_code == 200
+    data = r.json()
+    assert data["explain_meta"]["error_code"] == "EXPLAIN_QUOTA_EXCEEDED"
+    assert data["explanation"] is None
+    assert data["classification"]["action"]["label"] == "CREATE_JIRA_TICKET"
+    mock_llm.assert_not_called()

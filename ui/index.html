@@ -353,6 +353,30 @@
       display: flex; align-items: center; justify-content: space-between;
       margin-top: 14px; flex-wrap: wrap; gap: 10px;
     }
+    .demo-actions-left {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 14px;
+    }
+    .explain-toggle {
+      display: flex; align-items: center; gap: 8px; cursor: pointer;
+      font-size: 0.82rem; color: var(--muted); user-select: none;
+      font-family: var(--head);
+    }
+    .explain-toggle input {
+      width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer;
+    }
+    .explain-toggle:hover { color: var(--text); }
+    .explain-toggle.disabled { opacity: 0.55; cursor: not-allowed; }
+    .explain-toggle.disabled input { cursor: not-allowed; }
+    .explain-note {
+      font-family: var(--mono); font-size: 0.65rem; color: var(--dim);
+      margin-top: 8px; line-height: 1.5;
+    }
+    .explain-unavail {
+      margin-top: 12px; padding: 12px 16px;
+      background: rgba(232,168,74,0.08); border: 1px solid rgba(232,168,74,0.25);
+      border-radius: var(--r); font-size: 0.82rem; color: #e8a84a; line-height: 1.55;
+      font-family: var(--head);
+    }
     .demo-hint {
       font-family: var(--mono); font-size: 0.68rem; color: var(--dim);
     }
@@ -720,11 +744,12 @@
 
     <p class="section-lead l-en">
       Type any Arabic complaint — or pick one of the examples below — and the
-      pipeline classifies it in real time. Connects to the live API.
+      pipeline classifies it in real time. Classification is always free and deterministic.
+      One free AI explanation per visitor (optional).
     </p>
     <p class="section-lead l-ar">
       اكتب أي شكوى عربية — أو اختر من الأمثلة أدناه — وخط الأنابيب يصنّفها
-      في الوقت الفعلي. يتصل بالـ API المباشر.
+      في الوقت الفعلي. التصنيف مجاني دائماً ومحدد. تفسير واحد مجاني بالذكاء الاصطناعي لكل زائر (اختياري).
     </p>
 
     <div class="demo-wrap">
@@ -733,7 +758,7 @@
         <span class="l-en">API server →</span>
         <span class="l-ar">خادم الـ API →</span>
         <input type="text" class="api-url" id="apiUrl"
-               value="http://localhost:8000"
+               value="https://ysfxjo-arabic-complaint-classification.hf.space"
                placeholder="https://your-api.domain.com" />
       </div>
 
@@ -752,13 +777,22 @@
       </div>
 
       <div class="demo-actions">
-        <span class="demo-hint l-en">Ctrl+Enter to run</span>
-        <span class="demo-hint l-ar">Ctrl+Enter للتشغيل</span>
+        <div class="demo-actions-left">
+          <span class="demo-hint l-en">Ctrl+Enter to run</span>
+          <span class="demo-hint l-ar">Ctrl+Enter للتشغيل</span>
+          <label class="explain-toggle" id="explainToggleLabel">
+            <input type="checkbox" id="explainToggle" />
+            <span class="l-en">AI explanation (1 free try)</span>
+            <span class="l-ar">تفسير بالذكاء الاصطناعي (محاولة مجانية واحدة)</span>
+          </label>
+        </div>
         <button class="btn-run" id="runBtn" onclick="runAnalysis()" disabled>
           <span class="l-en">Analyze →</span>
           <span class="l-ar">← تحليل</span>
         </button>
       </div>
+      <p class="explain-note l-en" id="explainNoteEn" style="display:none"></p>
+      <p class="explain-note l-ar" id="explainNoteAr" style="display:none"></p>
 
       <div class="loading-row" id="loadingRow">
         <div class="spinner"></div>
@@ -799,6 +833,74 @@
   // Boot
   setLang('en');
 
+  /* ── Explain quota (1 free try per browser) ──────────────────── */
+  const EXPLAIN_KEY = 'ysfxjo_explain_used';
+
+  function explainAlreadyUsed() {
+    return localStorage.getItem(EXPLAIN_KEY) === '1';
+  }
+
+  function markExplainUsed() {
+    localStorage.setItem(EXPLAIN_KEY, '1');
+    updateExplainToggleUI();
+  }
+
+  function updateExplainToggleUI() {
+    const cb = document.getElementById('explainToggle');
+    const label = document.getElementById('explainToggleLabel');
+    const noteEn = document.getElementById('explainNoteEn');
+    const noteAr = document.getElementById('explainNoteAr');
+    const used = explainAlreadyUsed();
+
+    cb.checked = false;
+    cb.disabled = used;
+    label.classList.toggle('disabled', used);
+
+    const msgEn = 'One free AI explanation used on this browser. Classification stays unlimited.';
+    const msgAr = 'استُخدمت محاولة التفسير المجانية على هذا المتصفح. التصنيف يبقى غير محدود.';
+
+    noteEn.style.display = used ? 'block' : 'none';
+    noteAr.style.display = used ? 'block' : 'none';
+    noteEn.textContent = msgEn;
+    noteAr.textContent = msgAr;
+  }
+
+  function explainUnavailableMessage(code) {
+    const messages = {
+      EXPLAIN_QUOTA_EXCEEDED: {
+        en: 'AI explanation limit reached for this visitor. Classification results above are still valid.',
+        ar: 'تم الوصول لحد التفسير بالذكاء الاصطناعي لهذا الزائر. نتائج التصنيف أعلاه ما زالت صحيحة.',
+      },
+      LLM_HTTP_ERROR: {
+        en: 'AI explanation unavailable (provider limit reached). Classification results above are still valid.',
+        ar: 'تفسير الذكاء الاصطناعي غير متاح (حد المزود). نتائج التصنيف أعلاه ما زالت صحيحة.',
+      },
+      LLM_DISABLED: {
+        en: 'AI explanation is disabled on this server. Classification results above are still valid.',
+        ar: 'تفسير الذكاء الاصطناعي معطّل على هذا الخادم. نتائج التصنيف أعلاه ما زالت صحيحة.',
+      },
+      MISSING_API_KEY: {
+        en: 'AI explanation is not configured on this server. Classification results above are still valid.',
+        ar: 'تفسير الذكاء الاصطناعي غير مُعدّ على هذا الخادم. نتائج التصنيف أعلاه ما زالت صحيحة.',
+      },
+      LLM_TIMEOUT: {
+        en: 'AI explanation timed out. Classification results above are still valid.',
+        ar: 'انتهت مهلة تفسير الذكاء الاصطناعي. نتائج التصنيف أعلاه ما زالت صحيحة.',
+      },
+      LLM_INVALID_RESPONSE: {
+        en: 'AI explanation could not be parsed. Classification results above are still valid.',
+        ar: 'تعذّر parse تفسير الذكاء الاصطناعي. نتائج التصنيف أعلاه ما زالت صحيحة.',
+      },
+    };
+    const entry = messages[code];
+    if (entry) return lang === 'ar' ? entry.ar : entry.en;
+    return lang === 'ar'
+      ? 'تفسير الذكاء الاصطناعي غير متاح. نتائج التصنيف أعلاه ما زالت صحيحة.'
+      : 'AI explanation unavailable. Classification results above are still valid.';
+  }
+
+  updateExplainToggleUI();
+
   /* ── Scroll progress ─────────────────────────────────────────── */
   window.addEventListener('scroll', () => {
     const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
@@ -829,6 +931,7 @@
     if (!text) return;
 
     const base   = document.getElementById('apiUrl').value.trim().replace(/\/$/, '');
+    const wantExplain = document.getElementById('explainToggle').checked;
     const loader = document.getElementById('loadingRow');
     const errBox = document.getElementById('errBox');
     const grid   = document.getElementById('resultsGrid');
@@ -841,23 +944,32 @@
 
     try {
       let data;
+      let explainMeta = null;
 
-      // Try /explain-classification first (richer response), fall back to /predict
-      try {
+      if (wantExplain) {
+        if (explainAlreadyUsed()) {
+          throw new Error(lang === 'ar'
+            ? 'استُخدمت محاولة التفسير المجانية على هذا المتصفح.'
+            : 'Your one free AI explanation was already used on this browser.');
+        }
         const r = await fetch(`${base}/explain-classification`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text }),
         });
-        if (!r.ok) throw new Error('explain endpoint not available');
+        if (!r.ok) throw new Error(`Server responded ${r.status}`);
         const raw = await r.json();
-        // Normalize nested shape
-        if (raw.classification) {
-          data = { ...raw.classification, explanation: raw.explanation ?? null };
-        } else {
-          data = raw;
+        explainMeta = raw.explain_meta ?? null;
+        data = raw.classification
+          ? { ...raw.classification, explanation: raw.explanation ?? null }
+          : raw;
+
+        if (explainMeta?.error_code === 'EXPLAIN_QUOTA_EXCEEDED') {
+          markExplainUsed();
+        } else if (data.explanation?.summary) {
+          markExplainUsed();
         }
-      } catch (_) {
+      } else {
         const r = await fetch(`${base}/predict`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -867,7 +979,7 @@
         data = await r.json();
       }
 
-      renderResults(data);
+      renderResults(data, { wantExplain, explainMeta });
 
     } catch (err) {
       errBox.textContent = lang === 'ar'
@@ -881,7 +993,8 @@
   }
 
   /* ── Render results ──────────────────────────────────────────── */
-  function renderResults(data) {
+  function renderResults(data, opts = {}) {
+    const { wantExplain = false, explainMeta = null } = opts;
     const grid = document.getElementById('resultsGrid');
     grid.style.display = 'grid';
 
@@ -965,6 +1078,13 @@
       `;
       grid.appendChild(el);
       setTimeout(() => el.classList.add('in'), cards.length * 90);
+    } else if (wantExplain) {
+      const code = explainMeta?.error_code;
+      const el = document.createElement('div');
+      el.className = 'explain-unavail';
+      el.textContent = explainUnavailableMessage(code);
+      grid.appendChild(el);
+      setTimeout(() => { el.style.opacity = '1'; }, cards.length * 90);
     }
   }
 </script>
