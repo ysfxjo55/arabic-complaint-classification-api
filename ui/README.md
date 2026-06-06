@@ -1,48 +1,23 @@
-## Complaint Analyst UI
+# Arabic Complaint Intelligence UI
 
-This folder contains a lightweight, LibreChat-inspired frontend for the
-`text-complaint-api` backend.
+Static landing page and live demo for the complaint classification API.
 
-## Getting Started
+## Run locally
 
-1) Install dependencies:
-
-```bash
-npm install
-```
-
-2) Configure API URL:
+Start the API on port 8000, then serve this folder on port 3000:
 
 ```bash
-cp .env.local.example .env.local
-```
-
-Default value:
-
-```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
-```
-
-3) Run the dev server:
-
-```bash
-npm run dev
-```
-
-Then open [http://localhost:3000](http://localhost:3000).
-
-## Features
-
-- Chat-style complaint input flow
-- Arabic complaint support (RTL input)
-- Displays `sentiment`, `topic`, `intent`, and final `action`
-- Toggle between `/predict` and `/explain-classification`
-- Shows explanation metadata and error hints for LLM fallback cases
-
-## Backend requirement
-
-Run the backend API from the repository root:
-
-```bash
+# terminal 1 — API
 uvicorn main:app --reload
+
+# terminal 2 — UI
+cd ui && npm run dev
+```
+
+Open http://localhost:3000
+
+Alternatively, without npm:
+
+```bash
+cd ui && python3 -m http.server 3000
 ```
